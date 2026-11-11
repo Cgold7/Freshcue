@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="claude:viewport-fit-sides" content="cover">
+  <title>Freshcue Pantry Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    /*
+      Freshcue Design System
+      - Theme Neutral: Warm slate / sage tinted greys
+      - Accent: Mint Teal (#10B981)
+      - Expiration Status: Red (<24h or expired), Amber (2-3 days), Green (4+ days)
+    */
+
+    :root {
+      --bg-page: #F8FAF9;
+      --bg-card: #FFFFFF;
+      --bg-surface-elevated: #F0F4F2;
+      --border-subtle: #E2E8E4;
+      --border-focus: #10B981;
+
+      --text-main: #192823;
+      --text-muted: #62776E;
+      --text-inverse: #FFFFFF;
+
+      --accent-mint: #10B981;
+      --accent-mint-hover: #059669;
+      --accent-mint-light: #ECFDF5;
+
+      /* Status indicator colors */
+      --status-red-bg: #FEF2F2;
+      --status-red-border: #FCA5A5;
+      --status-red-text: #991B1B;
+      --status-red-badge: #EF4444;
+
+      --status-amber-bg: #FFFBEB;
+      --status-amber-border: #FDE68A;
+      --status-amber-text: #92400E;
+      --status-amber-badge: #F59E0B;
+
+      --status-green-bg: #F0FDF4;
+      --status-green-border: #86EFAC;
+      --status-green-text: #166534;
+      --status-green-badge: #10B981;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 2px 0 rgba(16, 30, 24, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(16, 30, 24, 0.07), 0 2px 4px -2px rgba(16, 30, 24, 0.05);
+
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg-page: #0F1714;
+        --bg-card: #182420;
+        --bg-surface-elevated: #21302A;
+        --border-subtle: #293D36;
+        --border-focus: #34D399;
+
+        --text-main: #F0F5F3;
+        --text-muted: #94A89F;
+        --text-inverse: #0F1714;
+
+        --accent-mint: #34D399;
+        --accent-mint-hover: #10B981;
+        --accent-mint-light: #13392D;
+
+        --status-red-bg: #2C1214;
+        --status-red-border: #7F1D1D;
+        --status-red-text: #FCA5A5;
+        --status-red-badge: #EF4444;
+
+        --status-amber-bg: #2B1D0C;
+        --status-amber-border: #78350F;
+        --status-amber-text: #FDE68A;
+        --status-amber-badge: #F59E0B;
+
+        --status-green-bg: #0D281E;
+        --status-green-border: #14532D;
+        --status-green-text: #86EFAC;
+        --status-green-badge: #10B981;
+
+        color-scheme: dark;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg-page: #0F1714;
+      --bg-card: #182420;
+      --bg-surface-elevated: #21302A;
+      --border-subtle: #293D36;
+      --border-focus: #34D399;
+
+      --text-main: #F0F5F3;
+      --text-muted: #94A89F;
+      --text-inverse: #0F1714;
+
+      --accent-mint: #34D399;
+      --accent-mint-hover: #10B981;
+      --accent-mint-light: #13392D;
+
+      --status-red-bg: #2C1214;
+      --status-red-border: #7F1D1D;
+      --status-red-text: #FCA5A5;
+      --status-red-badge: #EF4444;
+
+      --status-amber-bg: #2B1D0C;
+      --status-amber-border: #78350F;
+      --status-amber-text: #FDE68A;
+      --status-amber-badge: #F59E0B;
+
+      --status-green-bg: #0D281E;
+      --status-green-border: #14532D;
+      --status-green-text: #86EFAC;
+      --status-green-badge: #10B981;
+
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+      padding-block: 24px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-mint);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-inverse);
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent-mint);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideUp 0.2s ease forwards;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Quick Add Bar Card */
+    .quick-add-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .item-input {
+      flex: 1;
+      height: 46px;
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border-subtle);
+      background: var(--bg-page);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .item-input:focus {
+      border-color: var(--accent-mint);
+      background: var(--bg-card);
+      box-shadow: 0 0 0 3px var(--accent-mint-light);
+    }
+
+    .btn-add {
+      height: 46px;
+      padding: 0 20px;
+      background: var(--accent-mint);
+      color: var(--text-inverse);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-add:hover {
+      background: var(--accent-mint-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-add:active {
+      transform: translateY(0);
+    }
+
+    /* Chips Selector */
+    .chips-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .chips-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .chips-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .chip-option {
+      background: var(--bg-page);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .chip-option:hover {
+      border-color: var(--accent-mint);
+    }
+
+    .chip-option.selected {
+      background: var(--accent-mint-light);
+      border-color: var(--accent-mint);
+    }
+
+    .chip-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .chip-days {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .chip-option.selected .chip-title {
+      color: var(--accent-mint-hover);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .chip-option.selected .chip-title {
+        color: var(--accent-mint);
+      }
+    }
+    :root[data-theme="dark"] .chip-option.selected .chip-title {
+      color: var(--accent-mint);
+    }
+
+    /* Feed & List Items */
+    .feed-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 4px;
+    }
+
+    .feed-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .item-count-badge {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      margin-left: 6px;
+    }
+
+    .search-input {
+      height: 34px;
+      padding: 0 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 0.82rem;
+      outline: none;
+      width: 140px;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-mint);
+      width: 170px;
+    }
+
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .empty-state {
+      background: var(--bg-card);
+      border: 1.5px dashed var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    /* Pantry Card */
+    .pantry-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      animation: slideIn 0.2s ease forwards;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pantry-card:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .pantry-card.status-red { border-left: 5px solid var(--status-red-badge); }
+    .pantry-card.status-amber { border-left: 5px solid var(--status-amber-badge); }
+    .pantry-card.status-green { border-left: 5px solid var(--status-green-badge); }
+
+    .item-main-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .item-name {
+      font-weight: 700;
+      font-size: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-category-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .countdown-pill {
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      display: inline-block;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-red .countdown-pill { background: var(--status-red-bg); color: var(--status-red-text); border: 1px solid var(--status-red-border); }
+    .status-amber .countdown-pill { background: var(--status-amber-bg); color: var(--status-amber-text); border: 1px solid var(--status-amber-border); }
+    .status-green .countdown-pill { background: var(--status-green-bg); color: var(--status-green-text); border: 1px solid var(--status-green-border); }
+
+    .action-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-action {
+      border: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-used {
+      background: var(--accent-mint-light);
+      color: var(--accent-mint-hover);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .btn-used {
+        color: var(--accent-mint);
+      }
+    }
+    :root[data-theme="dark"] .btn-used {
+      color: var(--accent-mint);
+    }
+
+    .btn-used:hover {
+      background: var(--accent-mint);
+      color: var(--text-inverse);
+    }
+
+    .btn-tossed {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+    }
+
+    .btn-tossed:hover {
+      background: var(--status-red-bg);
+      color: var(--status-red-text);
+    }
+
+    /* Legend Bar */
+    .legend-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 12px 0 4px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+    }
+
+    .dot-red { background: var(--status-red-badge); }
+    .dot-amber { background: var(--status-amber-badge); }
+    .dot-green { background: var(--status-green-badge); }
+
+    .icon-sm {
+      width: 14px;
+      height: 14px;
+      stroke-width: 2.2;
+      stroke: currentColor;
+      fill: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h1>Freshcue</h1>
+      </div>
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme">
+        <svg class="icon-sm" viewBox="0 0 24 24" id="themeIcon">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Quick Add Bar -->
+    <div class="quick-add-card">
+      <div class="input-row">
+        <input type="text" id="itemNameInput" class="item-input" placeholder="What are you adding? (e.g. Baby Spinach, Milk)" autofocus>
+        <button class="btn-add" id="btnAddItem">
+          <svg class="icon-sm" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Item
+        </button>
+      </div>
+
+      <div>
+        <div class="chips-label" style="margin-bottom: 8px;">Select Expiration Preset</div>
+        <div class="chips-grid" id="presetChipsContainer">
+          <div class="chip-option selected" data-days="2" data-category="Urgent/Greens">
+            <span class="chip-title">Urgent / Greens</span>
+            <span class="chip-days">2 Days</span>
+          </div>
+          <div class="chip-option" data-days="5" data-category="Dairy/Meat">
+            <span class="chip-title">Dairy & Meat</span>
+            <span class="chip-days">5 Days</span>
+          </div>
+          <div class="chip-option" data-days="10" data-category="Produce">
+            <span class="chip-title">Produce</span>
+            <span class="chip-days">10 Days</span>
+          </div>
+          <div class="chip-option" data-days="30" data-category="Pantry">
+            <span class="chip-title">Pantry</span>
+            <span class="chip-days">30 Days</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feed Controls -->
+    <div class="feed-controls">
+      <div>
+        <span class="feed-title">Pantry Feed</span>
+        <span class="item-count-badge" id="itemCountBadge">0</span>
+      </div>
+      <input type="text" id="searchFilterInput" class="search-input" placeholder="Filter items...">
+    </div>
+
+    <!-- Pantry Feed List -->
+    <div class="feed-list" id="pantryFeedList"></div>
+
+    <!-- Color Legend -->
+    <div class="legend-bar">
+      <div class="legend-item">
+        <span class="legend-dot dot-red"></span>
+        <span>Red: Expired / &lt;24 hrs</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot dot-amber"></span>
+        <span>Amber: 2–3 Days</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot dot-green"></span>
+        <span>Green: 4+ Days</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Integrated Inventory Service Store & Events Module -->
+  <script>
+    /**
+     * Inventory Service / Store Module
+     * Encapsulates flat local storage CRUD operations and event callbacks
+     */
+    class FreshcueInventoryService {
+      static STORAGE_KEY = 'freshcue_pantry_items_v3';
+
+      constructor() {
+        this.items = [];
+        this.listeners = new Set();
+        this.loadFromStorage();
+      }
+
+      // Load items from localStorage or seed initial sample data
+      loadFromStorage() {
+        try {
+          const data = localStorage.getItem(FreshcueInventoryService.STORAGE_KEY);
+          if (data) {
+            this.items = JSON.parse(data);
+          } else {
+            this.items = [
+              {
+                id: 'seed-1',
+                name: 'Organic Baby Spinach & Greens',
+                category: 'Urgent/Greens',
+                presetDays: 2,
+                expiryTimestamp: Date.now() + (18 * 3600 * 1000), // 18 hours (<24h -> Red)
+                addedAt: Date.now()
+              },
+              {
+                id: 'seed-2',
+                name: 'Greek Yogurt & Whole Milk',
+                category: 'Dairy/Meat',
+                presetDays: 5,
+                expiryTimestamp: Date.now() + (2.5 * 86400 * 1000), // 2.5 days -> Amber
+                addedAt: Date.now()
+              },
+              {
+                id: 'seed-3',
+                name: 'Crisp Apples & Carrots',
+                category: 'Produce',
+                presetDays: 10,
+                expiryTimestamp: Date.now() + (7 * 86400 * 1000), // 7 days -> Green
+                addedAt: Date.now()
+              },
+              {
+                id: 'seed-4',
+                name: 'Whole Grain Rolled Oats',
+                category: 'Pantry',
+                presetDays: 30,
+                expiryTimestamp: Date.now() + (28 * 86400 * 1000), // 28 days -> Green
+                addedAt: Date.now()
+              }
+            ];
+            this.saveToStorage();
+          }
+        } catch (e) {
+          console.error('Failed to load items from storage:', e);
+          this.items = [];
+        }
+      }
+
+      // Save flat schema to storage
+      saveToStorage() {
+        try {
+          localStorage.setItem(FreshcueInventoryService.STORAGE_KEY, JSON.stringify(this.items));
+        } catch (e) {
+          console.error('Failed to write to storage:', e);
+        }
+      }
+
+      // Event listener registration
+      subscribe(listener) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+      }
+
+      // Dispatch event to listeners
+      notify(event) {
+        this.listeners.forEach(listener => listener(event));
+      }
+
+      // READ: Auto-sorted by closest expiration date first
+      getItems() {
+        return [...this.items].sort((a, b) => a.expiryTimestamp - b.expiryTimestamp);
+      }
+
+      // CREATE: Add new item and emit onItemAdded event
+      addItem(name, presetDays, category) {
+        const now = Date.now();
+        const newItem = {
+          id: 'item-' + now + '-' + Math.random().toString(36).substring(2, 6),
+          name: name.trim(),
+          category,
+          presetDays,
+          expiryTimestamp: now + (presetDays * 24 * 60 * 60 * 1000),
+          addedAt: now
+        };
+
+        this.items.push(newItem);
+        this.saveToStorage();
+        this.notify({ type: 'itemAdded', item: newItem, timestamp: now });
+        return newItem;
+      }
+
+      // DELETE / CONSUMED: Remove consumed item and emit onItemConsumed event
+      consumeItem(id) {
+        const index = this.items.findIndex(i => i.id === id);
+        if (index === -1) return null;
+
+        const [removed] = this.items.splice(index, 1);
+        this.saveToStorage();
+        this.notify({ type: 'itemConsumed', item: removed, timestamp: Date.now() });
+        return removed;
+      }
+
+      // DELETE / WASTED: Remove wasted item and emit onItemWasted event
+      wasteItem(id) {
+        const index = this.items.findIndex(i => i.id === id);
+        if (index === -1) return null;
+
+        const [removed] = this.items.splice(index, 1);
+        this.saveToStorage();
+        this.notify({ type: 'itemWasted', item: removed, timestamp: Date.now() });
+        return removed;
+      }
+
+      // Utility: Expiration Status helper
+      static getItemStatus(expiryTimestamp) {
+        const now = Date.now();
+        const diffMs = expiryTimestamp - now;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+        if (diffMs <= 0) {
+          return { status: 'red', text: 'Expired' };
+        } else if (diffHours < 24) {
+          const hrs = Math.max(1, Math.floor(diffHours));
+          return { status: 'red', text: `${hrs}h left` };
+        } else if (diffDays <= 3) {
+          const days = Math.round(diffDays);
+          return { status: 'amber', text: `${days} days left` };
+        } else {
+          const days = Math.round(diffDays);
+          return { status: 'green', text: `${days} days left` };
+        }
+      }
+    }
+
+    // Singleton Instance
+    const inventoryService = new FreshcueInventoryService();
+    let selectedPreset = { days: 2, category: 'Urgent/Greens' };
+    const THEME_KEY = 'freshcue_theme_preference';
+
+    // Subscribe UI to Inventory Service Events
+    inventoryService.subscribe((event) => {
+      showToast(event);
+      renderFeed();
+    });
+
+    // Toast Notification Handler
+    function showToast(event) {
+      const toastContainer = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+
+      let msg = '';
+      if (event.type === 'itemAdded') msg = `✨ Added <b>${escapeHtml(event.item.name)}</b>`;
+      if (event.type === 'itemConsumed') msg = `😋 Consumed <b>${escapeHtml(event.item.name)}</b>`;
+      if (event.type === 'itemWasted') msg = `🗑️ Tossed <b>${escapeHtml(event.item.name)}</b>`;
+
+      toast.innerHTML = msg;
+      toastContainer.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Render Pantry Feed
+    function renderFeed() {
+      const feedList = document.getElementById('pantryFeedList');
+      const countBadge = document.getElementById('itemCountBadge');
+      const searchQuery = document.getElementById('searchFilterInput').value.toLowerCase().trim();
+
+      const items = inventoryService.getItems().filter(item =>
+        item.name.toLowerCase().includes(searchQuery) ||
+        item.category.toLowerCase().includes(searchQuery)
+      );
+
+      countBadge.textContent = `${items.length}`;
+
+      if (items.length === 0) {
+        feedList.innerHTML = `
+          <div class="empty-state">
+            <div style="font-weight:700; margin-bottom: 4px; color:var(--text-main);">
+              ${searchQuery ? 'No matching items' : 'Pantry is empty'}
+            </div>
+            <div style="font-size:0.85rem;">
+              ${searchQuery ? 'Try clearing your search filter.' : 'Add items above to start tracking expiration countdowns.'}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      feedList.innerHTML = items.map(item => {
+        const { status, text } = FreshcueInventoryService.getItemStatus(item.expiryTimestamp);
+        const formattedDate = new Date(item.expiryTimestamp).toLocaleDateString(undefined, {
+          month: 'short', day: 'numeric'
+        });
+
+        return `
+          <div class="pantry-card status-${status}">
+            <div class="item-main-info">
+              <div class="item-name-row">
+                <span class="item-name">${escapeHtml(item.name)}</span>
+                <span class="item-category-tag">${escapeHtml(item.category)}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="countdown-pill">${text}</span>
+                <span style="font-size:0.78rem; color:var(--text-muted);">Expires ${formattedDate}</span>
+              </div>
+            </div>
+            <div class="action-group">
+              <button class="btn-action btn-used" onclick="inventoryService.consumeItem('${item.id}')" title="Mark item as consumed">
+                <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Used
+              </button>
+              <button class="btn-action btn-tossed" onclick="inventoryService.wasteItem('${item.id}')" title="Remove item as wasted">
+                <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Tossed
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    // Theme Manager
+    function initTheme() {
+      let currentTheme = 'system';
+      try {
+        currentTheme = localStorage.getItem(THEME_KEY) || 'system';
+      } catch (e) {}
+
+      const isDark = currentTheme === 'dark' || (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      updateThemeIcon(isDark);
+
+      document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const root = document.documentElement;
+        const nowDark = root.getAttribute('data-theme') === 'dark' ||
+          (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        const nextTheme = nowDark ? 'light' : 'dark';
+        root.setAttribute('data-theme', nextTheme);
+        try {
+          localStorage.setItem(THEME_KEY, nextTheme);
+        } catch (e) {}
+        updateThemeIcon(!nowDark);
+      });
+    }
+
+    function updateThemeIcon(isDark) {
+      const iconContainer = document.getElementById('themeIcon');
+      if (isDark) {
+        iconContainer.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+      } else {
+        iconContainer.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+      }
+    }
+
+    // Bind Controls
+    function setupEvents() {
+      // Preset Chip Selection
+      document.getElementById('presetChipsContainer').addEventListener('click', (e) => {
+        const chip = e.target.closest('.chip-option');
+        if (!chip) return;
+
+        document.querySelectorAll('.chip-option').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+
+        selectedPreset = {
+          days: parseInt(chip.getAttribute('data-days'), 10),
+          category: chip.getAttribute('data-category')
+        };
+      });
+
+      // Add Item Action
+      const submitItem = () => {
+        const input = document.getElementById('itemNameInput');
+        if (!input.value.trim()) return;
+        inventoryService.addItem(input.value, selectedPreset.days, selectedPreset.category);
+        input.value = '';
+        input.focus();
+      };
+
+      document.getElementById('btnAddItem').addEventListener('click', submitItem);
+      document.getElementById('itemNameInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitItem();
+      });
+
+      // Search Filter
+      document.getElementById('searchFilterInput').addEventListener('input', renderFeed);
+    }
+
+    // App Initialization
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      setupEvents();
+      renderFeed();
+    });
+  </script>
+</body>
+</html>
